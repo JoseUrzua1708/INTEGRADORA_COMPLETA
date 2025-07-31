@@ -19,5 +19,5 @@ def get_connection():
             return connection
         
     except Error as e:
-        print("Con los dedos de las manos, con los dedos de los pies. Con la polla y los cojones, todo suma 23. ", e)
+        print("Error al conectar con la base de datos: ", e)
         return None
