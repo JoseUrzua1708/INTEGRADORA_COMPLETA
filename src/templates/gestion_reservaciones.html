@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_reservaciones.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="container">
+        <main class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="mostrarTab('formulario')"><i class="fas fa-edit"></i> Formulario</button>
+                <button class="tab-btn" onclick="mostrarTab('historial-mesas')"><i class="fas fa-history"></i> Historial Mesas</button>
+                <button class="tab-btn" onclick="mostrarTab('historial-eventos')"><i class="fas fa-history"></i> Historial Eventos</button>
+            </div>
+
+            <section id="formulario" class="tab-content active">
+                <div class="form-container">
+                    <h2><i class="fas fa-calendar-plus"></i> Formulario de Reservación</h2>
+                    <form id="reservaForm" method="POST" action="/guardar">
+                        <div class="form-group">
+                            <label for="tipo">Tipo de reservación:</label>
+                            <select id="tipo" name="tipo" required>
+                                <option value="mesa">Mesa</option>
+                                <option value="evento">Evento</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cliente:</label>
+                            <select name="cliente" required>
+                                {% for c in clientes %}
+                                    <option value="{{ c[0] }}">{{ c[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Número de personas:</label>
+                            <input type="number" name="personas" min="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Fecha y hora:</label>
+                            <input type="datetime-local" name="fecha" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Notas adicionales:</label>
+                            <textarea name="notas"></textarea>
+                        </div>
+
+                        <div id="campos-mesa">
+                            <div class="form-group">
+                                <label>Sucursal:</label>
+                                <select name="sucursal">
+                                    {% for s in sucursales %}
+                                        <option value="{{ s[0] }}">{{ s[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Mesa:</label>
+                                <select name="mesa">
+                                    {% for m in mesas %}
+                                        <option value="{{ m[0] }}">{{ m[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Empleado:</label>
+                                <select name="empleado">
+                                    {% for e in empleados %}
+                                        <option value="{{ e[0] }}">{{ e[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="campos-evento" style="display:none;">
+                            <div class="form-group">
+                                <label>Evento:</label>
+                                <select name="evento">
+                                    {% for ev in eventos %}
+                                        <option value="{{ ev[0] }}">{{ ev[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Monto pagado:</label>
+                                <input type="number" name="monto" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <button type="reset" class="btn btn-secondary">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="historial-mesas" class="tab-content">
+                <div class="table-container">
+                    <h2>Historial de Reservaciones (Mesas)</h2>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Mesa</th>
+                                    <th>Personas</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in reservas_mesas %}
+                                    <tr>
+                                        <td>{{ r[0] }}</td>
+                                        <td>{{ r[1] }}</td>
+                                        <td>{{ r[2] }}</td>
+                                        <td>{{ r[3] }}</td>
+                                        <td>{{ r[4] }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5">No hay reservaciones de mesas.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="historial-eventos" class="tab-content">
+                <div class="table-container">
+                    <h2>Historial de Reservaciones (Eventos)</h2>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Evento</th>
+                                    <th>Personas</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for e in reservas_eventos %}
+                                    <tr>
+                                        <td>{{ e[0] }}</td>
+                                        <td>{{ e[1] }}</td>
+                                        <td>{{ e[2] }}</td>
+                                        <td>{{ e[3] }}</td>
+                                        <td>{{ e[4] }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5">No hay reservaciones de eventos.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/gestion_reservaciones.js') }}"></script>
+</body>
+</html>
