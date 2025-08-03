@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Pedidos - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            <a href="{{ url_for('client_orders') }}" class="nav-item active">
+                <span class="nav-icon">📦</span>
+                <span>MIS PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('client_profile') }}" class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span>PERFIL</span>
+            </a>
+            <a href="{{ url_for('payment') }}" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>PAGO</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - CLIENTE</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Mis Pedidos</h1>
+            <div class="client-badge">CLIENTE</div>
+        </div>
+
+        <div class="orders-grid">
+            {% for order in orders %}
+            <div class="order-card client-order" data-status="{{ order.Estatus }}">
+                <div class="order-header">
+                    <h3>Pedido #{{ order.Codigo_Pedido }}</h3>
+                    <span class="status-badge status-{{ order.Estatus.lower().replace(' ', '-') }}">
+                        {{ order.Estatus }}
+                    </span>
+                </div>
+                <div class="order-details">
+                    <p><strong>Fecha:</strong> {{ order.Fecha_Hora.strftime('%d/%m/%Y %H:%M') }}</p>
+                    <p><strong>Total:</strong> ${{ "%.2f"|format(order.Total) }}</p>
+                    <p><strong>Tipo:</strong> {{ order.Tipo }}</p>
+                    <p><strong>Sucursal:</strong> {{ order.Sucursal_Nombre }}</p>
+                </div>
+                {% if order.Estatus == 'Nuevo' %}
+                <div class="order-actions">
+                    <button class="btn-cancel" onclick="cancelOrder({{ order.ID }})">Cancelar Pedido</button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not orders %}
+        <div class="empty-state">
+            <h3>No tienes pedidos aún</h3>
+            <p>¡Haz tu primer pedido desde el menú!</p>
+            <a href="{{ url_for('pos') }}" class="btn-primary">Ver Menú</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

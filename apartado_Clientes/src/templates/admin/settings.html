@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración Admin - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            {% if user_role == 'dueño' %}
+            <a href="{{ url_for('owner_dashboard') }}" class="nav-item owner-only">
+                <span class="nav-icon">👑</span>
+                <span>PANEL</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            {% if user_role in ['admin', 'dueño'] %}
+            <a href="{{ url_for('admin_tables') }}" class="nav-item">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('admin_settings') }}" class="nav-item active">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - ADMIN</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="settings-container">
+            <div class="page-header">
+                <h1>Panel de Administración</h1>
+                {% if user_role == 'dueño' %}
+                <div class="owner-badge">👑 DUEÑO</div>
+                {% else %}
+                <div class="admin-badge">ADMINISTRADOR</div>
+                {% endif %}
+            </div>
+            
+            <div class="settings-sections">
+                <!-- Gestión de Códigos de Administrador -->
+                <div class="settings-section">
+                    <h2>🔐 Códigos de Administrador</h2>
+                    <div class="admin-codes-management">
+                        <div class="generate-code-section">
+                            <button class="btn-primary" onclick="generateAdminCode()">
+                                Generar Nuevo Código de Admin
+                            </button>
+                            <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">
+                                Los códigos generados permiten a nuevos usuarios registrarse como administradores
+                            </p>
+                        </div>
+                        
+                        <div class="codes-table">
+                            <h3>Códigos Existentes</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Creado</th>
+                                        <th>Usado Por</th>
+                                        <th>Fecha Uso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for code in admin_codes %}
+                                    <tr>
+                                        <td>
+                                            <code class="admin-code">{{ code.Codigo }}</code>
+                                            <button onclick="copyToClipboard('{{ code.Codigo }}')" class="btn-copy">📋</button>
+                                        </td>
+                                        <td>{{ code.rol_nombre }}</td>
+                                        <td>
+                                            <span class="status-badge {% if code.Usado %}status-usado{% else %}status-disponible{% endif %}">
+                                                {% if code.Usado %}USADO{% else %}DISPONIBLE{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>{{ code.Fecha_Creacion.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ code.usado_por_nombre or '-' }}</td>
+                                        <td>{{ code.Fecha_Uso.strftime('%d/%m/%Y') if code.Fecha_Uso else '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Usuarios -->
+                <div class="settings-section">
+                    <h2>👥 Gestión de Usuarios</h2>
+                    <div class="users-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cliente in clientes %}
+                                <tr>
+                                    <td>{{ cliente.Nombre }} {{ cliente.Apellido_P }}</td>
+                                    <td>{{ cliente.Correo }}</td>
+                                    <td>
+                                        <span class="role-badge role-{{ cliente.rol_nombre }}">
+                                            {{ cliente.rol_nombre.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ cliente.Fecha_Registro.strftime('%d/%m/%Y') if cliente.Fecha_Registro else 'N/A' }}</td>
+                                    <td>
+                                        {% if cliente.rol_nombre != 'admin' or cliente.ID != session.user_id %}
+                                        <button class="btn-edit" onclick="editUser({{ cliente.ID }})">Editar</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Perfil de Usuario Admin -->
+                <div class="settings-section">
+                    <h2>👤 Mi Perfil de Administrador</h2>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input type="text" value="{{ user_data.Nombre }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos:</label>
+                            <input type="text" value="{{ user_data.Apellido_P }} {{ user_data.Apellido_M or '' }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <input type="email" value="{{ user_data.Correo }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono:</label>
+                            <input type="tel" value="{{ user_data.Telefono or 'No especificado' }}" readonly>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sucursales -->
+                <div class="settings-section">
+                    <h2>🏢 Sucursales</h2>
+                    <div class="sucursales-list">
+                        {% for sucursal in sucursales %}
+                        <div class="sucursal-card">
+                            <h3>{{ sucursal.Nombre }}</h3>
+                            <p>{{ sucursal.Direccion }}</p>
+                            <p>Tel: {{ sucursal.Telefono }}</p>
+                            <span class="status-badge status-{{ sucursal.Estatus.lower() }}">{{ sucursal.Estatus }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Configuración del Sistema -->
+                <div class="settings-section">
+                    <h2>⚙️ Configuración del Sistema</h2>
+                    <div class="system-settings">
+                        <div class="setting-item">
+                            <label>Impuesto (%):</label>
+                            <input type="number" value="10" min="0" max="100">
+                        </div>
+                        <div class="setting-item">
+                            <label>Moneda:</label>
+                            <select>
+                                <option value="USD">USD ($)</option>
+                                <option value="MXN">MXN ($)</option>
+                                <option value="EUR">EUR (€)</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Idioma:</label>
+                            <select>
+                                <option value="es">Español</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

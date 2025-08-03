@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Mesas - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>s
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            {% if user_role == 'dueño' %}
+            <a href="{{ url_for('owner_dashboard') }}" class="nav-item owner-only">
+                <span class="nav-icon">👑</span>
+                <span>PANEL</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('admin_tables') }}" class="nav-item active">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - {{ user_role.upper() }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Gestión de Mesas</h1>
+            {% if user_role == 'dueño' %}
+            <div class="owner-badge">👑 DUEÑO</div>
+            {% else %}
+            <div class="admin-badge">ADMINISTRADOR</div>
+            {% endif %}
+            <button class="btn-primary" onclick="showAddTableModal()">Agregar Mesa</button>
+        </div>
+
+        <div class="tables-grid">
+            {% for mesa in mesas %}
+            <div class="table-card" data-status="{{ mesa.Estatus }}">
+                <div class="table-header">
+                    <h3>Mesa {{ mesa.Numero_Mesa }}</h3>
+                    <span class="status-badge status-{{ mesa.Estatus.lower() }}">{{ mesa.Estatus }}</span>
+                </div>
+                <div class="table-details">
+                    <p><strong>Sucursal:</strong> {{ mesa.Sucursal_Nombre }}</p>
+                    <p><strong>Capacidad:</strong> {{ mesa.Capacidad }} personas</p>
+                    <p><strong>Ubicación:</strong> {{ mesa.Ubicacion }}</p>
+                    {% if mesa.Fecha_Ultimo_Uso %}
+                    <p><strong>Último uso:</strong> {{ mesa.Fecha_Ultimo_Uso.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% endif %}
+                </div>
+                <div class="table-actions">
+                    <button class="btn-edit" onclick="editTable({{ mesa.ID }})">Editar</button>
+                    {% if user_role == 'dueño' %}
+                    <button class="btn-delete" onclick="deleteTable({{ mesa.ID }})">Eliminar</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not mesas %}
+        <div class="empty-state">
+            <h3>No hay mesas registradas</h3>
+            <p>Agrega mesas para comenzar a gestionar tu restaurante</p>
+            <button class="btn-primary" onclick="showAddTableModal()">Agregar Primera Mesa</button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para agregar mesa -->
+<div id="addTableModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddTableModal()">&times;</span>
+        <h2>Agregar Nueva Mesa</h2>
+        <form id="addTableForm">
+            <div class="form-group">
+                <label>Sucursal:</label>
+                <select name="sucursal_id" required>
+                    {% for sucursal in sucursales %}
+                    <option value="{{ sucursal.ID }}">{{ sucursal.Nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Número de Mesa:</label>
+                <input type="text" name="numero_mesa" required>
+            </div>
+            <div class="form-group">
+                <label>Capacidad:</label>
+                <input type="number" name="capacidad" min="1" max="20" required>
+            </div>
+            <div class="form-group">
+                <label>Ubicación:</label>
+                <select name="ubicacion" required>
+                    <option value="Interior">Interior</option>
+                    <option value="Terraza">Terraza</option>
+                    <option value="Barra">Barra</option>
+                    <option value="Privada">Privada</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeAddTableModal()">Cancelar</button>
+                <button type="submit">Agregar Mesa</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

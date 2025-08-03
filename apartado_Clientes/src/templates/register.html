@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-form">
+        <div class="logo">
+            <h1>B&B</h1>
+        </div>
+        <h2>Registro</h2>
+        <form method="POST">
+            <div class="form-group">
+                <input type="text" name="nombre" placeholder="Nombre" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="apellido_p" placeholder="Apellido Paterno" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="apellido_m" placeholder="Apellido Materno">
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Correo electrónico" required>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Contraseña" required minlength="6">
+                <small style="color: #666; font-size: 0.8rem;">La contraseña debe tener al menos 6 caracteres</small>
+            </div>
+            <div class="form-group">
+                <input type="tel" name="telefono" placeholder="Teléfono">
+            </div>
+            <div class="form-group">
+                <input type="date" name="fecha_nacimiento" placeholder="Fecha de nacimiento">
+            </div>
+            <div class="form-group">
+                <select name="genero">
+                    <option value="Prefiero no decir">Prefiero no decir</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            
+            <!-- Sección para código de administrador -->
+            <div class="admin-code-section">
+                <div class="form-group">
+                    <input type="text" name="admin_code" placeholder="Código de Administrador (opcional)" 
+                           style="border: 2px dashed #e74c3c;">
+                    <small style="color: #e74c3c; font-size: 0.8rem;">
+                        🔐 Solo si tienes un código de administrador válido
+                    </small>
+                </div>
+                <div class="admin-warning">
+                    <p style="font-size: 0.8rem; color: #7f8c8d; text-align: center; margin: 10px 0;">
+                        ⚠️ Los códigos de administrador son proporcionados únicamente por el dueño del restaurante
+                    </p>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Registrarse</button>
+        </form>
+        <p class="register-link">
+            ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión aquí</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

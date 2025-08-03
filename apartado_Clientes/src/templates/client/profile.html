@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            <a href="{{ url_for('client_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>MIS PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('client_profile') }}" class="nav-item active">
+                <span class="nav-icon">👤</span>
+                <span>PERFIL</span>
+            </a>
+            <a href="{{ url_for('payment') }}" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>PAGO</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - CLIENTE</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="profile-container">
+            <div class="page-header">
+                <h1>Mi Perfil</h1>
+                <div class="client-badge">CLIENTE</div>
+            </div>
+            
+            <div class="profile-section">
+                <h2>Información Personal</h2>
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <input type="text" value="{{ user_data.Nombre }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos:</label>
+                        <input type="text" value="{{ user_data.Apellido_P }} {{ user_data.Apellido_M or '' }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" value="{{ user_data.Correo }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono:</label>
+                        <input type="tel" value="{{ user_data.Telefono or 'No especificado' }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Nacimiento:</label>
+                        <input type="date" value="{{ user_data.Fecha_Nacimiento or '' }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Género:</label>
+                        <input type="text" value="{{ user_data.Genero or 'No especificado' }}" readonly>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="btn-primary" onclick="alert('Función de editar perfil próximamente')">Editar Perfil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

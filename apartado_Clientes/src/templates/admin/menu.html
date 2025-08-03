@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Menú - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            {% if user_role == 'dueño' %}
+            <a href="{{ url_for('owner_dashboard') }}" class="nav-item owner-only">
+                <span class="nav-icon">👑</span>
+                <span>PANEL</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('menu_management') }}" class="nav-item active">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            {% if user_role in ['admin', 'dueño'] %}
+            <a href="{{ url_for('admin_tables') }}" class="nav-item">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - {{ user_role.upper() }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Gestión de Menú</h1>
+            {% if user_role == 'dueño' %}
+            <div class="owner-badge">👑 DUEÑO</div>
+            {% else %}
+            <div class="admin-badge">ADMINISTRADOR</div>
+            {% endif %}
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="showAddCategoryModal()">Agregar Categoría</button>
+                {% if user_role == 'dueño' %}
+                <button class="btn-secondary" onclick="showAddSucursalModal()">Agregar Sucursal</button>
+                {% endif %}
+                <button class="btn-primary" onclick="showAddItemModal()">Agregar Producto</button>
+            </div>
+        </div>
+
+        <div class="menu-management">
+            <div class="categories-section">
+                <h2>Categorías</h2>
+                <div class="categories-grid">
+                    {% for category in categories %}
+                    <div class="category-card">
+                        <h3>{{ category.Nombre }}</h3>
+                        <p>{{ category.Descripcion or 'Sin descripción' }}</p>
+                        <span class="status-badge status-{{ category.Estatus.lower() }}">{{ category.Estatus }}</span>
+                        {% if user_role in ['admin', 'dueño'] %}
+                        <div class="category-actions">
+                            <button class="btn-edit-small" onclick="editCategory({{ category.ID }})">✏️</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="menu-items-section">
+                <h2>Productos del Menú</h2>
+                <div class="menu-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in menu_items %}
+                            <tr>
+                                <td>
+                                    <div class="menu-item-image-small">
+                                        {% if item.Imagen_URL %}
+                                        <img src="{{ item.Imagen_URL }}" alt="{{ item.Nombre }}" onerror="this.src='/placeholder.svg?height=50&width=50'">
+                                        {% else %}
+                                        <img src="/placeholder.svg?height=50&width=50" alt="{{ item.Nombre }}">
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ item.Nombre }}</td>
+                                <td>{{ item.Categoria_Nombre }}</td>
+                                <td>${{ "%.2f"|format(item.Precio) }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ item.Estatus.lower() }}">
+                                        {{ item.Estatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-edit" onclick="editItem({{ item.ID }})">Editar</button>
+                                    {% if user_role in ['admin', 'dueño'] %}
+                                    <button class="btn-delete" onclick="deleteItem({{ item.ID }})">Eliminar</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar producto -->
+<div id="addItemModal" class="modal">
+    <div class="modal-content modal-large">
+        <span class="close" onclick="closeAddItemModal()">&times;</span>
+        <h2>Agregar Nuevo Producto</h2>
+        <form id="addItemForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio:</label>
+                    <input type="number" name="precio" step="0.01" min="0" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Descripción:</label>
+                <textarea name="descripcion" rows="3" placeholder="Descripción del platillo (opcional)"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Categoría:</label>
+                <select name="categoria_id" required>
+                    <option value="">Selecciona una categoría</option>
+                    {% for category in categories %}
+                    <option value="{{ category.ID }}">{{ category.Nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>URL de la Imagen:</label>
+                <input type="url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg" id="imageUrlInput">
+                <small class="form-help">
+                    💡 Puedes usar enlaces de Google Images, Unsplash, o cualquier imagen web
+                </small>
+            </div>
+            
+            <!-- Vista previa de la imagen -->
+            <div class="image-preview-container" id="imagePreviewContainer">
+                <label>Vista Previa:</label>
+                <div class="image-preview">
+                    <img id="imagePreview" src="/placeholder.svg?height=150&width=150" alt="Vista previa">
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" onclick="closeAddItemModal()">Cancelar</button>
+                <button type="submit">Agregar Producto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para editar producto -->
+<div id="editItemModal" class="modal">
+    <div class="modal-content modal-large">
+        <span class="close" onclick="closeEditItemModal()">&times;</span>
+        <h2>Editar Producto</h2>
+        <form id="editItemForm">
+            <input type="hidden" name="item_id" id="editItemId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" name="nombre" id="editItemNombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio:</label>
+                    <input type="number" name="precio" id="editItemPrecio" step="0.01" min="0" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Descripción:</label>
+                <textarea name="descripcion" id="editItemDescripcion" rows="3" placeholder="Descripción del platillo (opcional)"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Categoría:</label>
+                <select name="categoria_id" id="editItemCategoria" required>
+                    <option value="">Selecciona una categoría</option>
+                    {% for category in categories %}
+                    <option value="{{ category.ID }}">{{ category.Nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>URL de la Imagen:</label>
+                <input type="url" name="imagen_url" id="editItemImagenUrl" placeholder="https://ejemplo.com/imagen.jpg">
+                <small class="form-help">
+                    💡 Puedes usar enlaces de Google Images, Unsplash, o cualquier imagen web
+                </small>
+            </div>
+            
+            <!-- Vista previa de la imagen -->
+            <div class="image-preview-container" id="editImagePreviewContainer">
+                <label>Vista Previa:</label>
+                <div class="image-preview">
+                    <img id="editImagePreview" src="/placeholder.svg?height=150&width=150" alt="Vista previa">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Estado:</label>
+                <select name="estatus" id="editItemEstatus" required>
+                    <option value="Disponible">Disponible</option>
+                    <option value="Agotado">Agotado</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" onclick="closeEditItemModal()">Cancelar</button>
+                <button type="submit">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para agregar categoría -->
+<div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddCategoryModal()">&times;</span>
+        <h2>Agregar Nueva Categoría</h2>
+        <form id="addCategoryForm">
+            <div class="form-group">
+                <label>Nombre de la Categoría:</label>
+                <input type="text" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción:</label>
+                <textarea name="descripcion" rows="3" placeholder="Descripción opcional"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeAddCategoryModal()">Cancelar</button>
+                <button type="submit">Agregar Categoría</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para agregar sucursal (solo dueño) -->
+{% if user_role == 'dueño' %}
+<div id="addSucursalModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddSucursalModal()">&times;</span>
+        <h2>👑 Agregar Nueva Sucursal</h2>
+        <form id="addSucursalForm">
+            <div class="form-group">
+                <label>Nombre de la Sucursal:</label>
+                <input type="text" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label>Dirección:</label>
+                <textarea name="direccion" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Teléfono:</label>
+                <input type="tel" name="telefono" required>
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeAddSucursalModal()">Cancelar</button>
+                <button type="submit">Agregar Sucursal</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal de confirmación para eliminar -->
+<div id="deleteConfirmModal" class="modal">
+    <div class="modal-content modal-small">
+        <h2>Confirmar Eliminación</h2>
+        <p>¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
+        <input type="hidden" id="deleteItemId">
+        <div class="form-actions">
+            <button type="button" onclick="closeDeleteConfirmModal()">Cancelar</button>
+            <button type="button" class="btn-delete" onclick="confirmDeleteItem()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función para mostrar vista previa de imagen
+function showImagePreview() {
+    const imageUrlInput = document.getElementById('imageUrlInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    
+    const url = imageUrlInput.value.trim();
+    
+    if (url) {
+        imagePreview.src = url;
+        imagePreview.onerror = function() {
+            this.src = '/placeholder.svg?height=150&width=150';
+        };
+    } else {
+        imagePreview.src = '/placeholder.svg?height=150&width=150';
+    }
+}
+
+// Función para mostrar vista previa en el formulario de edición
+function showEditImagePreview() {
+    const imageUrlInput = document.getElementById('editItemImagenUrl');
+    const imagePreview = document.getElementById('editImagePreview');
+    
+    const url = imageUrlInput.value.trim();
+    
+    if (url) {
+        imagePreview.src = url;
+        imagePreview.onerror = function() {
+            this.src = '/placeholder.svg?height=150&width=150';
+        };
+    } else {
+        imagePreview.src = '/placeholder.svg?height=150&width=150';
+    }
+}
+
+// Función para editar un producto
+function editItem(itemId) {
+    // Obtener datos del producto
+    fetch(`/api/get_menu_item/${itemId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const item = data.item;
+                
+                // Llenar el formulario con los datos del producto
+                document.getElementById('editItemId').value = item.ID;
+                document.getElementById('editItemNombre').value = item.Nombre;
+                document.getElementById('editItemPrecio').value = item.Precio;
+                document.getElementById('editItemDescripcion').value = item.Descripcion || '';
+                document.getElementById('editItemCategoria').value = item.Categoria_ID;
+                document.getElementById('editItemImagenUrl').value = item.Imagen_URL || '';
+                document.getElementById('editItemEstatus').value = item.Estatus;
+                
+                // Mostrar vista previa de la imagen
+                showEditImagePreview();
+                
+                // Mostrar el modal
+                document.getElementById('editItemModal').style.display = 'block';
+            } else {
+                showNotification('Error al cargar datos del producto', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error de conexión', 'error');
+        });
+}
+
+// Función para eliminar un producto
+function deleteItem(itemId) {
+    document.getElementById('deleteItemId').value = itemId;
+    document.getElementById('deleteConfirmModal').style.display = 'block';
+}
+
+// Confirmar eliminación de producto
+function confirmDeleteItem() {
+    const itemId = document.getElementById('deleteItemId').value;
+    
+    fetch('/api/delete_menu_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            item_id: itemId
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Producto eliminado exitosamente');
+            closeDeleteConfirmModal();
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.error || 'Error al eliminar producto', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Cerrar modal de confirmación de eliminación
+function closeDeleteConfirmModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
+// Cerrar modal de edición
+function closeEditItemModal() {
+    document.getElementById('editItemModal').style.display = 'none';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Vista previa de imagen en formulario de agregar
+    const imageUrlInput = document.getElementById('imageUrlInput');
+    if (imageUrlInput) {
+        imageUrlInput.addEventListener('input', showImagePreview);
+        imageUrlInput.addEventListener('blur', showImagePreview);
+        // Mostrar placeholder inicial
+        showImagePreview();
+    }
+    
+    // Vista previa de imagen en formulario de editar
+    const editImageUrlInput = document.getElementById('editItemImagenUrl');
+    if (editImageUrlInput) {
+        editImageUrlInput.addEventListener('input', showEditImagePreview);
+        editImageUrlInput.addEventListener('blur', showEditImagePreview);
+    }
+    
+    // Formulario de agregar producto
+    const addItemForm = document.getElementById('addItemForm');
+    if (addItemForm) {
+        addItemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitNewItem();
+        });
+    }
+    
+    // Formulario de editar producto
+    const editItemForm = document.getElementById('editItemForm');
+    if (editItemForm) {
+        editItemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitEditItem();
+        });
+    }
+});
+
+// Función para enviar formulario de edición
+function submitEditItem() {
+    const form = document.getElementById('editItemForm');
+    const formData = new FormData(form);
+    
+    const itemData = {
+        item_id: formData.get('item_id'),
+        nombre: formData.get('nombre'),
+        descripcion: formData.get('descripcion'),
+        precio: Number.parseFloat(formData.get('precio')),
+        categoria_id: Number.parseInt(formData.get('categoria_id')),
+        imagen_url: formData.get('imagen_url'),
+        estatus: formData.get('estatus')
+    };
+    
+    fetch('/api/update_menu_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Producto actualizado exitosamente');
+            closeEditItemModal();
+            // Recargar la página para mostrar los cambios
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.error || 'Error al actualizar producto', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+</script>
+{% endblock %}

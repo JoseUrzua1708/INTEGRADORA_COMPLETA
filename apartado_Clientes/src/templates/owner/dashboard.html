@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Panel del Dueño - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            <a href="{{ url_for('owner_dashboard') }}" class="nav-item active owner-only">
+                <span class="nav-icon">👑</span>
+                <span>PANEL</span>
+            </a>
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('admin_tables') }}" class="nav-item">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - DUEÑO</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="owner-dashboard">
+            <div class="page-header">
+                <h1>👑 Panel del Dueño</h1>
+                <div class="owner-badge">PROPIETARIO</div>
+            </div>
+            
+            <!-- Estadísticas Principales -->
+            <div class="stats-grid">
+                <div class="stat-card revenue">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3>Ingresos Totales</h3>
+                        <p class="stat-value">${{ "%.2f"|format(stats.ingresos_totales) }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card orders">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <h3>Total Pedidos</h3>
+                        <p class="stat-value">{{ stats.total_pedidos }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card clients">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>Clientes Registrados</h3>
+                        <p class="stat-value">{{ stats.total_clientes }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card staff">
+                    <div class="stat-icon">👨‍💼</div>
+                    <div class="stat-info">
+                        <h3>Personal/Admins</h3>
+                        <p class="stat-value">{{ stats.total_admins }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="quick-actions">
+                <h2>Acciones Rápidas</h2>
+                <div class="actions-grid">
+                    <a href="{{ url_for('admin_settings') }}" class="action-card">
+                        <span class="action-icon">🔐</span>
+                        <h3>Generar Códigos Admin</h3>
+                        <p>Crear códigos para nuevos administradores</p>
+                    </a>
+                    
+                    <a href="{{ url_for('menu_management') }}" class="action-card">
+                        <span class="action-icon">📋</span>
+                        <h3>Gestionar Menú</h3>
+                        <p>Agregar o modificar productos del menú</p>
+                    </a>
+                    
+                    <a href="{{ url_for('admin_orders') }}" class="action-card">
+                        <span class="action-icon">📊</span>
+                        <h3>Ver Todos los Pedidos</h3>
+                        <p>Monitorear el estado de todos los pedidos</p>
+                    </a>
+                    
+                    <a href="{{ url_for('admin_tables') }}" class="action-card">
+                        <span class="action-icon">🪑</span>
+                        <h3>Gestionar Mesas</h3>
+                        <p>Administrar mesas y sucursales</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Información del Sistema -->
+            <div class="system-info">
+                <h2>Información del Sistema</h2>
+                <div class="info-cards">
+                    <div class="info-card">
+                        <h3>🔒 Seguridad</h3>
+                        <p>Sistema de roles implementado con códigos de invitación seguros</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📱 Acceso</h3>
+                        <p>Control total sobre usuarios y permisos del sistema</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📈 Reportes</h3>
+                        <p>Estadísticas en tiempo real de tu restaurante</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

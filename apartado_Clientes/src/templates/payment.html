@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Pago - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            
+            {% if user_role == 'dueño' %}
+            <a href="{{ url_for('owner_dashboard') }}" class="nav-item owner-only">
+                <span class="nav-icon">👑</span>
+                <span>PANEL</span>
+            </a>
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('admin_tables') }}" class="nav-item">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+            {% elif user_role in ['admin', 'mesero', 'cocinero'] %}
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            {% if user_role == 'admin' %}
+            <a href="{{ url_for('admin_tables') }}" class="nav-item">
+                <span class="nav-icon">🪑</span>
+                <span>MESAS</span>
+            </a>
+            <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>ADMIN</span>
+            </a>
+            {% endif %}
+            {% else %}
+            <a href="{{ url_for('client_orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>MIS PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('client_profile') }}" class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span>PERFIL</span>
+            </a>
+            {% endif %}
+            
+            <a href="{{ url_for('payment') }}" class="nav-item active">
+                <span class="nav-icon">💳</span>
+                <span>PAGO</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0 - {{ user_role.upper() }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="payment-container">
+            <div class="payment-summary">
+                <h2>Resumen del Pedido</h2>
+                <div class="order-items">
+                    {% for item in cart %}
+                    <div class="payment-item">
+                        <span class="item-name">{{ item.name }}</span>
+                        <span class="item-quantity">x{{ item.quantity }}</span>
+                        <span class="item-price">${{ "%.2f"|format(item.price * item.quantity) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="payment-totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>${{ "%.2f"|format(subtotal) }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Impuestos (10%):</span>
+                        <span>${{ "%.2f"|format(tax) }}</span>
+                    </div>
+                    <div class="total-row final-total">
+                        <span>Total:</span>
+                        <span>${{ "%.2f"|format(total) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h2>Método de Pago</h2>
+                <div class="payment-options">
+                    <button class="payment-btn active" data-method="Efectivo">
+                        <span class="payment-icon">💵</span>
+                        <span>Efectivo</span>
+                    </button>
+                    <button class="payment-btn" data-method="Tarjeta">
+                        <span class="payment-icon">💳</span>
+                        <span>Tarjeta</span>
+                    </button>
+                    <button class="payment-btn" data-method="Transferencia">
+                        <span class="payment-icon">🏦</span>
+                        <span>Transferencia</span>
+                    </button>
+                    <button class="payment-btn" data-method="App">
+                        <span class="payment-icon">📱</span>
+                        <span>App</span>
+                    </button>
+                </div>
+
+                <div class="payment-actions">
+                    <button class="btn-cancel" onclick="window.location.href='{{ url_for('pos') }}'">Cancelar</button>
+                    <button class="btn-process-payment" onclick="processPayment()">Procesar Pago</button>
+                </div>
+                
+                <!-- Información del usuario -->
+                <div class="payment-user-info">
+                    <p><strong>Cliente:</strong> {{ session.user_name }}</p>
+                    {% if user_role == 'dueño' %}
+                    <p><strong>Rol:</strong> 👑 DUEÑO</p>
+                    {% else %}
+                    <p><strong>Rol:</strong> {{ user_role.upper() }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones específicas para la página de pago
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners para métodos de pago
+    const paymentBtns = document.querySelectorAll('.payment-btn');
+    paymentBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            paymentBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+
+function processPayment() {
+    const selectedMethod = document.querySelector('.payment-btn.active');
+    if (!selectedMethod) {
+        showNotification('Selecciona un método de pago', 'error');
+        return;
+    }
+
+    const method = selectedMethod.dataset.method;
+    
+    // Deshabilitar botón para evitar doble click
+    const processBtn = document.querySelector('.btn-process-payment');
+    processBtn.disabled = true;
+    processBtn.textContent = 'Procesando...';
+
+    // Simular procesamiento de pago
+    showNotification('Procesando pago...', 'info');
+
+    fetch('/api/place_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`¡Pago procesado exitosamente con ${method}!`, 'success');
+            showNotification(`Código de pedido: ${data.order_code}`, 'info');
+            setTimeout(() => {
+                window.location.href = '/pos';
+            }, 3000);
+        } else {
+            showNotification(data.error || 'Error al procesar el pago', 'error');
+            // Rehabilitar botón
+            processBtn.disabled = false;
+            processBtn.textContent = 'Procesar Pago';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+        // Rehabilitar botón
+        processBtn.disabled = false;
+        processBtn.textContent = 'Procesar Pago';
+    });
+}
+
+function showNotification(message, type = 'success') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = 'flash-message';
+    notification.textContent = message;
+
+    if (type === 'error') {
+        notification.style.background = '#e74c3c';
+    } else if (type === 'info') {
+        notification.style.background = '#3498db';
+    }
+
+    // Agregar a contenedor de mensajes
+    let container = document.querySelector('.flash-messages');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'flash-messages';
+        document.body.appendChild(container);
+    }
+
+    container.appendChild(notification);
+
+    // Remover después de 5 segundos
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

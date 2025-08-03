@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Menú - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            <a href="{{ url_for('menu_management') }}" class="nav-item active">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('payment') }}" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>PAGO</span>
+            </a>
+            <a href="{{ url_for('orders') }}" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>CONFIGURACIÓN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Gestión de Menú</h1>
+            <button class="btn-primary" onclick="showAddItemModal()">Agregar Producto</button>
+        </div>
+
+        <div class="menu-management">
+            <div class="categories-section">
+                <h2>Categorías</h2>
+                <div class="categories-grid">
+                    {% for category in categories %}
+                    <div class="category-card">
+                        <h3>{{ category.Nombre }}</h3>
+                        <p>{{ category.Descripcion or 'Sin descripción' }}</p>
+                        <span class="status-badge status-{{ category.Estatus.lower() }}">{{ category.Estatus }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="menu-items-section">
+                <h2>Productos del Menú</h2>
+                <div class="menu-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in menu_items %}
+                            <tr>
+                                <td>{{ item.Nombre }}</td>
+                                <td>{{ item.Categoria_Nombre }}</td>
+                                <td>${{ "%.2f"|format(item.Precio) }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ item.Estatus.lower() }}">
+                                        {{ item.Estatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-edit" onclick="editItem({{ item.ID }})">Editar</button>
+                                    <button class="btn-delete" onclick="deleteItem({{ item.ID }})">Eliminar</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

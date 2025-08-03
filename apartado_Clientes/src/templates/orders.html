@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos - Byte&Bite{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>B&B</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('pos') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>INICIO</span>
+            </a>
+            <a href="{{ url_for('menu_management') }}" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>MENÚ</span>
+            </a>
+            <a href="{{ url_for('payment') }}" class="nav-item">
+                <span class="nav-icon">💳</span>
+                <span>PAGO</span>
+            </a>
+            <a href="{{ url_for('orders') }}" class="nav-item active">
+                <span class="nav-icon">📦</span>
+                <span>PEDIDOS</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>CONFIGURACIÓN</span>
+            </a>
+        </nav>
+        <div class="version">V 1.0</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Gestión de Pedidos</h1>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-status="all">Todos</button>
+                <button class="filter-btn" data-status="Nuevo">Nuevos</button>
+                <button class="filter-btn" data-status="En preparación">En Preparación</button>
+                <button class="filter-btn" data-status="Listo">Listos</button>
+                <button class="filter-btn" data-status="Entregado">Entregados</button>
+            </div>
+        </div>
+
+        <div class="orders-grid">
+            {% for order in orders %}
+            <div class="order-card" data-status="{{ order.Estatus }}">
+                <div class="order-header">
+                    <h3>Pedido #{{ order.Codigo_Pedido }}</h3>
+                    <span class="status-badge status-{{ order.Estatus.lower().replace(' ', '-') }}">
+                        {{ order.Estatus }}
+                    </span>
+                </div>
+                <div class="order-details">
+                    <p><strong>Cliente:</strong> {{ order.Nombre }} {{ order.Apellido_P }}</p>
+                    <p><strong>Fecha:</strong> {{ order.Fecha_Hora.strftime('%d/%m/%Y %H:%M') }}</p>
+                    <p><strong>Total:</strong> ${{ "%.2f"|format(order.Total) }}</p>
+                    <p><strong>Tipo:</strong> {{ order.Tipo }}</p>
+                </div>
+                <div class="order-actions">
+                    <select onchange="updateOrderStatus({{ order.ID }}, this.value)">
+                        <option value="Nuevo" {% if order.Estatus == 'Nuevo' %}selected{% endif %}>Nuevo</option>
+                        <option value="En preparación" {% if order.Estatus == 'En preparación' %}selected{% endif %}>En Preparación</option>
+                        <option value="Listo" {% if order.Estatus == 'Listo' %}selected{% endif %}>Listo</option>
+                        <option value="Entregado" {% if order.Estatus == 'Entregado' %}selected{% endif %}>Entregado</option>
+                        <option value="Cancelado" {% if order.Estatus == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                    </select>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
